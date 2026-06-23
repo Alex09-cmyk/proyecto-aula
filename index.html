@@ -1,0 +1,731 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Dashboard - Proyecto Aula</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { 
+            background: radial-gradient(circle at 50% 50%, #0f172a 0%, #030712 100%);
+            color: #f3f4f6; 
+            font-family: 'Segoe UI', sans-serif; 
+            margin: 0; 
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body::before {
+            content: "";
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            background-image: 
+                radial-gradient(rgba(16, 185, 129, 0.03) 1px, transparent 0),
+                radial-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 0);
+            background-size: 40px 40px;
+            background-position: 0 0, 20px 20px;
+            z-index: 1;
+            pointer-events: none;
+        }
+
+        .sidebar {
+            width: 260px;
+            background: rgba(10, 15, 30, 0.75);
+            backdrop-filter: blur(25px);
+            border-right: 1px solid rgba(255, 255, 255, 0.06);
+            display: flex;
+            flex-direction: column;
+            padding: 20px 15px;
+            box-sizing: border-box;
+            z-index: 10;
+        }
+
+        .sidebar-brand {
+            font-size: 17px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            letter-spacing: 1px;
+        }
+        
+        .sidebar-brand i {
+            color: #10b981;
+            font-size: 20px;
+            filter: drop-shadow(0 0 8px rgba(16, 185, 129, 0.5));
+        }
+
+        .sidebar-menu {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            flex-grow: 1;
+        }
+
+        .sidebar-item a {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: #9ca3af;
+            text-decoration: none;
+            padding: 11px 15px;
+            border-radius: 12px;
+            margin-bottom: 6px;
+            font-size: 13.5px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: 1px solid transparent;
+        }
+
+        .sidebar-item a i {
+            font-size: 15px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-item.active a, .sidebar-item a:hover {
+            background: rgba(16, 185, 129, 0.08);
+            color: #ffffff;
+            border-color: rgba(16, 185, 129, 0.3);
+            box-shadow: 0 0 20px rgba(16, 185, 129, 0.1);
+        }
+
+        .sidebar-item.active a i {
+            color: #10b981;
+            filter: drop-shadow(0 0 5px rgba(16, 185, 129, 0.5));
+        }
+
+        .btn-logout {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+            padding: 12px;
+            text-decoration: none;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: 700;
+            font-size: 13px;
+            letter-spacing: 0.5px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        .btn-logout:hover { 
+            background: #ef4444; 
+            color: white;
+            box-shadow: 0 0 20px rgba(239, 68, 68, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding: 20px 25px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 5;
+            box-sizing: border-box;
+        }
+
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+            padding-bottom: 10px;
+        }
+        
+        .welcome-box {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .imagen-trabajando-chica {
+            width: 42px;
+            height: auto;
+            filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.3));
+        }
+        
+        .welcome-box h1 { 
+            margin: 0; 
+            font-size: 24px; 
+            font-weight: 700;
+            letter-spacing: -0.5px;
+            color: #ffffff;
+        }
+        
+        .welcome-box p { 
+            margin: 4px 0 0 0; 
+            color: #9ca3af; 
+            font-size: 13px; 
+        }
+
+        .tab-content {
+            display: none;
+            animation: panelFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        
+        .tab-content.active {
+            display: grid; 
+            grid-template-columns: 1fr;
+            gap: 15px;
+        }
+        
+        .tab-content.split-view {
+            grid-template-columns: 2fr 1fr;
+        }
+
+        @keyframes panelFadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .card {
+            background: rgba(15, 23, 42, 0.45);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            padding: 14px 20px;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.25);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .card h2 {
+            margin-top: 0;
+            font-size: 14px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #ffffff;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            padding-bottom: 8px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .item { 
+            background: rgba(255, 255, 255, 0.02); 
+            padding: 10px; 
+            margin-bottom: 6px; 
+            border-radius: 12px; 
+            border-left: 3px solid #10b981;
+            font-size: 13px;
+            line-height: 1.4;
+            color: #d1d5db;
+            transition: transform 0.2s ease;
+        }
+        .item:hover {
+            transform: translateX(3px);
+            background: rgba(255, 255, 255, 0.04);
+        }
+
+        .summary-badge {
+            background: rgba(255, 255, 255, 0.02); 
+            padding: 8px 10px; 
+            border-radius: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid rgba(255, 255, 255, 0.03);
+        }
+        
+        .summary-badge span {
+            color: #9ca3af;
+            font-weight: 500;
+        }
+
+        .multimedia-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 15px;
+        }
+        
+        .audio-box {
+            background: rgba(255, 255, 255, 0.02);
+            padding: 15px;
+            border-radius: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+        
+        .audio-box p { 
+            margin: 0 0 12px 0; 
+            font-size: 13.5px; 
+            font-weight: 600; 
+            color: #e5e7eb;
+        }
+
+        audio {
+            width: 100%;
+            height: 32px;
+            border-radius: 8px;
+        }
+
+        .comentario-input-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .comentario-input-group input {
+            flex-grow: 1;
+            padding: 12px 14px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            background: rgba(15, 23, 42, 0.6);
+            color: white;
+            outline: none;
+            font-size: 13px;
+        }
+        
+        .comentario-input-group button {
+            padding: 0 18px;
+            background: linear-gradient(90deg, #10b981 0%, #3b82f6 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            font-size: 13px;
+            transition: all 0.3s ease;
+        }
+
+        #resultado-ia { 
+            margin-top: 8px; 
+            padding: 8px 12px; 
+            background: rgba(15, 23, 42, 0.8); 
+            border-radius: 10px; 
+            border-left: 3px solid #2563eb; 
+            color: #9ca3af; 
+            font-size: 12px; 
+            display: none; 
+            line-height: 1.4; 
+        }
+
+        .col-vertical-stack {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .actualizando {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(16, 185, 129, 0.9);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            display: none;
+            z-index: 1000;
+            animation: fadeInOut 2s ease;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translateY(-10px); }
+            20% { opacity: 1; transform: translateY(0); }
+            80% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-10px); }
+        }
+
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.08); border-radius: 10px; }
+
+        @media (max-width: 1200px) {
+            .tab-content.split-view { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="actualizando" id="notificacion-actualizacion">
+        <i class="fa-solid fa-rotate"></i> Contenido actualizado
+    </div>
+
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <i class="fa-solid fa-graduation-cap"></i> PROYECTO AULA
+        </div>
+        <ul class="sidebar-menu">
+            <li class="sidebar-item active" id="menu-inicio" onclick="cambiarPestana('inicio')"><a><i class="fa-solid fa-house"></i> Inicio</a></li>
+            <li class="sidebar-item" id="menu-noticias" onclick="cambiarPestana('noticias')"><a><i class="fa-solid fa-newspaper"></i> Noticias</a></li>
+            <li class="sidebar-item" id="menu-consejos" onclick="cambiarPestana('consejos')"><a><i class="fa-solid fa-bolt"></i> Consejos</a></li>
+            <li class="sidebar-item" id="menu-efemerides" onclick="cambiarPestana('efemerides')"><a><i class="fa-solid fa-calendar-days"></i> Efemérides</a></li>
+            <li class="sidebar-item" id="menu-musica" onclick="cambiarPestana('musica')"><a><i class="fa-solid fa-music"></i> Música</a></li>
+            <li class="sidebar-item" id="menu-podcasts" onclick="cambiarPestana('podcasts')"><a><i class="fa-solid fa-microphone"></i> Podcasts</a></li>
+        </ul>
+        <a href="/logout" class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i> Cerrar Sesión</a>
+    </div>
+
+    <div class="main-content">
+        
+        <div class="dashboard-header">
+            <div class="welcome-box">
+                <img src="{{ url_for('static', filename='trabajando.png') }}" class="imagen-trabajando-chica" alt="Trabajando">
+                <div>
+                    <h1>¡Bienvenido de nuevo, {{ nombre }}! 👋</h1>
+                    <p id="subtitulo-dashboard">Selecciona una opción del menú para comenzar.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- INICIO -->
+        <div id="contenido-inicio" class="tab-content active">
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 100%; box-sizing: border-box;">
+                
+                <div class="col-vertical-stack">
+                    <div class="card" style="border-left: 4px solid #10b981;">
+                        <h2><i class="fa-solid fa-chart-pie" style="color:#10b981;"></i> Resumen Rápido</h2>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 6px; font-size: 12px;">
+                            <div class="summary-badge"><span>📰 News:</span> <strong id="count-noticias" style="color: #10b981;">{{ noticias|length }}</strong></div>
+                            <div class="summary-badge"><span>🎙️ Pods:</span> <strong id="count-podcasts" style="color: #3b82f6;">{{ podcasts|length }}</strong></div>
+                            <div class="summary-badge"><span>🎵 Música:</span> <strong id="count-musicas" style="color: #a855f7;">{{ musicas|length }}</strong></div>
+                            <div class="summary-badge"><span>💬 Comen:</span> <strong id="count-comentarios" style="color: #f59e0b;">{{ comentarios|length }}</strong></div>
+                        </div>
+                    </div>
+
+                    <div class="card" style="border-left: 4px solid #a855f7;">
+                        <h2><i class="fa-solid fa-trophy" style="color:#a855f7;"></i> Tus Logros</h2>
+                        <div style="font-size: 12px; display: flex; flex-direction: column; gap: 5px;">
+                            <div style="color: #34d399;"><i class="fa-solid fa-circle-check" style="margin-right:6px;"></i> Primer inicio de sesión exitoso</div>
+                            <div style="color: #34d399;"><i class="fa-solid fa-circle-check" style="margin-right:6px;"></i> Conexión con base de datos activa</div>
+                            <div style="color: #9ca3af;"><i class="fa-regular fa-circle" style="margin-right:6px;"></i> Publica tu primer comentario</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-vertical-stack">
+                    <div class="card" style="border-left: 4px solid #f59e0b; background: rgba(245, 158, 11, 0.02);">
+                        <h2><i class="fa-solid fa-lightbulb" style="color:#f59e0b;"></i> Consejo del Día</h2>
+                        <p id="consejo-del-dia" style="font-style: italic; font-size: 12px; margin: 0 0 6px 0; color: #f3f4f6; line-height: 1.35;">
+                            {% if consejos %}"{{ consejos[0]['contenido'] }}"{% else %}"Establece metas pequeñas para tus sesiones de estudio diarias."{% endif %}
+                        </p>
+                        <span style="font-size: 10px; color: #f59e0b; font-weight: bold;">— RECOMENDACIÓN ACADÉMICA</span>
+                    </div>
+
+                    <div class="card" style="border-left: 4px solid #ef4444;">
+                        <h2><i class="fa-solid fa-calendar-check" style="color:#ef4444;"></i> Próximo Evento</h2>
+                        <div style="font-size: 13px; font-weight: 700; color: white;">Entrega de Proyecto Aula Final</div>
+                        <div style="font-size: 11px; color: #9ca3af; margin-top: 3px;"><i class="fa-regular fa-clock" style="color:#ef4444; margin-right:5px;"></i> Viernes 19 de Junio - 23:59 hrs</div>
+                    </div>
+                </div>
+
+                <div class="col-vertical-stack">
+                    <div class="card" style="border-left: 4px solid #3b82f6;">
+                        <h2><i class="fa-solid fa-robot" style="color:#3b82f6;"></i> Asistente Virtual</h2>
+                        <p style="font-size: 11.5px; margin: 0 0 8px 0; color: #9ca3af; line-height: 1.35;">¿Tienes dudas sobre Flask, Python o tus consultas en MySQL? ¡Estoy listo para ayudarte!</p>
+                        <button onclick="consultarAsistente()" style="width: 100%; padding: 8px; background: #2563eb; color: white; border: none; border-radius: 8px; font-weight: 700; cursor: pointer; font-size: 11px; transition: all 0.3s ease;">Consultar a la IA</button>
+                        <div id="resultado-ia"></div>
+                    </div>
+
+                    <div class="card" style="border-left: 4px solid #6b7280;">
+                        <h2><i class="fa-solid fa-chart-bar" style="color:#9ca3af;"></i> Tu Actividad Semanal</h2>
+                        <div style="display: flex; justify-content: space-between; align-items: flex-end; height: 35px; padding: 0 5px; margin-bottom: 4px;">
+                            <div style="height: 30%; width: 8px; background: #10b981; border-radius: 2px;"></div>
+                            <div style="height: 55%; width: 8px; background: #10b981; border-radius: 2px;"></div>
+                            <div style="height: 85%; width: 8px; background: #10b981; border-radius: 2px;"></div>
+                            <div style="height: 20%; width: 8px; background: #10b981; border-radius: 2px;"></div>
+                            <div style="height: 70%; width: 8px; background: #10b981; border-radius: 2px;"></div>
+                            <div style="height: 15%; width: 8px; background: #374151; border-radius: 2px;"></div>
+                            <div style="height: 95%; width: 8px; background: #10b981; border-radius: 2px;"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 9px; color: #6b7280; padding: 0 2px;">
+                            <span>L</span><span>M</span><span>M</span><span>J</span><span>V</span><span>S</span><span>D</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card" style="text-align: center; background: linear-gradient(90deg, rgba(16,185,129,0.04) 0%, rgba(59,130,246,0.04) 100%); padding: 10px; margin-top: -5px;">
+                <p style="margin: 0; font-size: 12.5px; font-weight: 600; color: #34d399;">
+                    <i class="fa-solid fa-quote-left" style="margin-right: 8px; color: #10b981; font-size: 10px;"></i> 
+                    <span id="frase-motivacional">Cargando pensamiento...</span>
+                    <i class="fa-solid fa-quote-right" style="margin-left: 8px; color: #10b981; font-size: 10px;"></i>
+                </p>
+            </div>
+        </div>
+
+        <!-- NOTICIAS -->
+        <div id="contenido-noticias" class="tab-content">
+            <div class="card" id="card-noticias">
+                <h2><i class="fa-solid fa-newspaper" style="color:#10b981;"></i> Últimas Noticias</h2>
+                <div id="lista-noticias">
+                    {% for n in noticias %}
+                        <div class="item" style="border-left-color: #10b981;">
+                            <strong style="color: #ffffff; display: block; margin-bottom: 5px;">{{ n['titulo'] }}</strong>
+                            <span style="color: #9ca3af; font-size: 12px;">{{ n['contenido'] }}</span>
+                        </div>
+                    {% else %}
+                        <p style="font-size:13px; color:#6b7280;">No hay noticias.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- CONSEJOS -->
+        <div id="contenido-consejos" class="tab-content">
+            <div class="card" id="card-consejos">
+                <h2><i class="fa-solid fa-bolt" style="color:#f59e0b;"></i> Consejos de Aprendizaje</h2>
+                <div id="lista-consejos">
+                    {% for c in consejos %}
+                        <div class="item" style="border-color: #f59e0b;">{{ c['contenido'] }}</div>
+                    {% else %}
+                        <p style="font-size:13px; color:#6b7280;">No hay consejos.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- EFEMÉRIDES -->
+        <div id="contenido-efemerides" class="tab-content">
+            <div class="card" id="card-efemerides">
+                <h2><i class="fa-solid fa-calendar-days" style="color:#ef4444;"></i> Efemérides Académicas</h2>
+                <div id="lista-efemerides">
+                    {% for e in efemerides %}
+                        <div class="item" style="border-color: #ef4444;">{{ e['contenido'] }}</div>
+                    {% else %}
+                        <p style="font-size:13px; color:#6b7280;">No hay eventos.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- MÚSICA -->
+        <div id="contenido-musica" class="tab-content">
+            <div class="card">
+                <h2><i class="fa-solid fa-music" style="color:#a855f7;"></i> Galería de Audio Relajante</h2>
+                <div class="multimedia-grid" id="lista-musicas">
+                    {% for cancion in musicas %}
+                        <div class="audio-box">
+                            <p title="{{ cancion }}">{{ cancion }}</p>
+                            <audio controls><source src="{{ url_for('static', filename='music/' + cancion) }}" type="audio/mpeg"></audio>
+                        </div>
+                    {% else %}
+                        <p style="font-size:13px; color:#6b7280;">Carpeta multimedia vacía.</p>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- PODCASTS -->
+        <div id="contenido-podcasts" class="tab-content split-view">
+            <div class="col-left">
+                <div class="card">
+                    <h2><i class="fa-solid fa-microphone" style="color:#3b82f6;"></i> Podcasts Universitarios</h2>
+                    <div class="multimedia-grid" id="lista-podcasts">
+                        {% for p in podcasts %}
+                            <div class="audio-box">
+                                <p title="{{ p }}">{{ p }}</p>
+                                <audio controls>
+                                    <source src="{{ url_for('static', filename='podcast/' + p) }}" type="audio/mpeg">
+                                </audio>
+                            </div>
+                        {% else %}
+                            <p style="font-size:13px; color:#6b7280;">No hay podcasts.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-right">
+                <div class="card" style="display: flex; flex-direction: column; height: 100%;">
+                    <h2><i class="fa-solid fa-comments" style="color:#f59e0b;"></i> Tablón Comunitario</h2>
+                    <div style="flex-grow: 1; overflow-y: auto; max-height: 260px;" id="lista-comentarios">
+                        {% for c in comentarios %}
+                            <div class="item" style="border-color: #f59e0b;">{{ c['contenido'] }}</div>
+                        {% else %}
+                            <p style="font-size:12px; color:#6b7280; text-align:center;">Sin comentarios.</p>
+                        {% endfor %}
+                    </div>
+                    <div class="comentario-input-group">
+                        <input type="text" id="nuevo-comentario" placeholder="Escribe al foro...">
+                        <button onclick="enviarComentario()">Enviar</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // ============================================
+        // ACTUALIZACIÓN AUTOMÁTICA CADA 30 SEGUNDOS
+        // ============================================
+        
+        function actualizarDatos() {
+            fetch('/api/datos')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.error) return;
+                    
+                    // Mostrar notificación
+                    const notif = document.getElementById('notificacion-actualizacion');
+                    notif.style.display = 'block';
+                    setTimeout(() => notif.style.display = 'none', 2000);
+                    
+                    // Actualizar contadores
+                    document.getElementById('count-noticias').textContent = data.noticias.length;
+                    document.getElementById('count-podcasts').textContent = data.podcasts.length;
+                    document.getElementById('count-musicas').textContent = data.musicas.length;
+                    document.getElementById('count-comentarios').textContent = data.comentarios.length;
+                    
+                    // Actualizar consejo del día
+                    if (data.consejos.length > 0) {
+                        document.getElementById('consejo-del-dia').textContent = '"' + data.consejos[0].contenido + '"';
+                    }
+                    
+                    // Actualizar noticias
+                    const noticiasContainer = document.getElementById('lista-noticias');
+                    if (noticiasContainer) {
+                        let noticiasHTML = '';
+                        if (data.noticias.length > 0) {
+                            data.noticias.forEach(n => {
+                                noticiasHTML += `<div class="item" style="border-left-color: #10b981;">
+                                    <strong style="color: #ffffff; display: block; margin-bottom: 5px;">${n.titulo}</strong>
+                                    <span style="color: #9ca3af; font-size: 12px;">${n.contenido}</span>
+                                </div>`;
+                            });
+                        } else {
+                            noticiasHTML = '<p style="font-size:13px; color:#6b7280;">No hay noticias.</p>';
+                        }
+                        noticiasContainer.innerHTML = noticiasHTML;
+                    }
+                    
+                    // Actualizar consejos
+                    const consejosContainer = document.getElementById('lista-consejos');
+                    if (consejosContainer) {
+                        let consejosHTML = '';
+                        if (data.consejos.length > 0) {
+                            data.consejos.forEach(c => {
+                                consejosHTML += `<div class="item" style="border-color: #f59e0b;">${c.contenido}</div>`;
+                            });
+                        } else {
+                            consejosHTML = '<p style="font-size:13px; color:#6b7280;">No hay consejos.</p>';
+                        }
+                        consejosContainer.innerHTML = consejosHTML;
+                    }
+                    
+                    // Actualizar efemérides
+                    const efemeridesContainer = document.getElementById('lista-efemerides');
+                    if (efemeridesContainer) {
+                        let efemeridesHTML = '';
+                        if (data.efemerides.length > 0) {
+                            data.efemerides.forEach(e => {
+                                efemeridesHTML += `<div class="item" style="border-color: #ef4444;">${e.contenido}</div>`;
+                            });
+                        } else {
+                            efemeridesHTML = '<p style="font-size:13px; color:#6b7280;">No hay eventos.</p>';
+                        }
+                        efemeridesContainer.innerHTML = efemeridesHTML;
+                    }
+                    
+                    // Actualizar comentarios
+                    const comentariosContainer = document.getElementById('lista-comentarios');
+                    if (comentariosContainer) {
+                        let comentariosHTML = '';
+                        if (data.comentarios.length > 0) {
+                            data.comentarios.forEach(c => {
+                                comentariosHTML += `<div class="item" style="border-color: #f59e0b;">${c.contenido}</div>`;
+                            });
+                        } else {
+                            comentariosHTML = '<p style="font-size:12px; color:#6b7280; text-align:center;">Sin comentarios.</p>';
+                        }
+                        comentariosContainer.innerHTML = comentariosHTML;
+                    }
+                })
+                .catch(error => console.log('Error al actualizar:', error));
+        }
+        
+        // Actualizar cada 30 segundos
+        setInterval(actualizarDatos, 30000);
+        
+        // También actualizar al enviar un comentario
+        const originalEnviarComentario = enviarComentario;
+        
+        function cambiarPestana(pestana) {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+            
+            const contentPanel = document.getElementById('contenido-' + pestana);
+            const menuTab = document.getElementById('menu-' + pestana);
+            
+            if(pestana === 'podcasts') {
+                contentPanel.className = 'tab-content split-view active';
+            } else {
+                contentPanel.className = 'tab-content active';
+            }
+            menuTab.classList.add('active');
+
+            const subtitulo = document.getElementById('subtitulo-dashboard');
+            if(pestana === 'inicio') subtitulo.innerText = "Selecciona una opción del menú para comenzar.";
+            else subtitulo.innerText = `Visualizando la sección de ${pestana.charAt(0).toUpperCase() + pestana.slice(1)}.`;
+        }
+
+        function enviarComentario() {
+            const texto = document.getElementById('nuevo-comentario').value;
+            if(!texto.trim()) return;
+            fetch('/comentar', { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({contenido: texto}) 
+            }).then(() => {
+                document.getElementById('nuevo-comentario').value = '';
+                actualizarDatos(); // Actualizar inmediatamente después de comentar
+            });
+        }
+
+        function consultarAsistente() {
+            const respuestas = [
+                "🤖 Asistente: Recuerda que en Python la sangría es vital. ¡Cuida tu indentación!",
+                "🤖 Asistente: Usa marcadores parametrizados en tus consultas MySQL para evitar inyecciones SQL.",
+                "🤖 Asistente: ¿Flask no actualiza los cambios? Verifica que 'debug=True' esté activo en tu app.run().",
+                "🤖 Asistente: ¡Buena práctica! No olvides cerrar tus cursores y conexiones en cada consulta a la base de datos.",
+                "🤖 Asistente: Si utilizas CSS Grid, 'repeat(3, 1fr)' forzará un diseño simétrico horizontal sin saltos.",
+                "🤖 Asistente: Tip de optimización: indexa las columnas de tu BD que uses frecuentemente en los bloques WHERE."
+            ];
+            
+            const div = document.getElementById('resultado-ia');
+            div.style.display = 'block';
+            div.innerText = "🤖 Analizando sistema...";
+            
+            setTimeout(() => {
+                div.innerText = respuestas[Math.floor(Math.random() * respuestas.length)];
+            }, 400);
+        }
+
+        window.onload = () => {
+            const frases = [
+                "El éxito es la suma de esfuerzos repetidos cada día.", 
+                "La disciplina tarde o temprano vencerá a la inteligencia.", 
+                "No cuentes los días, haz que los días cuenten.",
+                "El único modo de hacer un gran trabajo es amar lo que haces.",
+                "La persistencia puede transformar el fracaso en un logro extraordinario."
+            ];
+            
+            function rotarFrase() {
+                document.getElementById('frase-motivacional').innerText = frases[Math.floor(Math.random() * frases.length)];
+            }
+
+            rotarFrase();
+            setInterval(rotarFrase, 10000);
+        }
+    </script>
+</body>
+</html>

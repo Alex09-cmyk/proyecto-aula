@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Acceso al Sistema</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body { 
+            background: #030712; margin: 0; display: flex; justify-content: center; 
+            align-items: center; height: 100vh; font-family: 'Segoe UI', sans-serif; color: white;
+        }
+
+        .main-layout { display: flex; align-items: flex-start; gap: 120px; }
+        
+        .side-columns { display: flex; flex-direction: column; gap: 80px; }
+
+        .panel { 
+            background: #0f172a; padding: 30px; border-radius: 20px; 
+            border: 1px solid #1e293b; width: 200px; text-align: center;
+            box-shadow: 0 0 15px rgba(59, 130, 246, 0.1); 
+        }
+
+        /* --- LOGIN (SIN CAMBIOS) --- */
+        .glass-capsule {
+            background: #0f172a; padding: 40px; border-radius: 30px;
+            border: 2px solid #3b82f6; 
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.3), inset 0 0 20px rgba(59, 130, 246, 0.1);
+            text-align: center; width: 350px;
+        }
+
+        .logo-central { 
+            width: 110px; height: 110px; border-radius: 50%; margin-bottom: 20px;
+            animation: spin 10s linear infinite;
+            box-shadow: 0 0 25px rgba(59, 130, 246, 0.6), 0 0 50px rgba(16, 185, 129, 0.2);
+        }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        .input-group { margin-bottom: 15px; }
+        .input-group input {
+            width: 100%; padding: 12px; border-radius: 10px; background: #030712;
+            border: 1px solid #1e293b; color: white; box-sizing: border-box;
+        }
+
+        .btn-login {
+            width: 100%; padding: 14px; border-radius: 10px; border: none;
+            background: linear-gradient(90deg, #10b981, #3b82f6);
+            color: white; font-weight: bold; cursor: pointer;
+            box-shadow: 0 0 15px rgba(16, 185, 129, 0.4);
+        }
+
+        /* Panel clima con icono animado */
+        .weather-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+            display: block;
+        }
+        
+        .temp-text {
+            font-size: 24px;
+            font-weight: 700;
+            margin: 5px 0;
+        }
+        
+        .location-text {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 5px;
+        }
+        
+        .weather-desc {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 3px;
+        }
+        
+        /* FECHA Y DÍA - COLORES MEJORADOS */
+        .fecha-texto {
+            font-size: 14px;
+            color: #ffffff;
+            font-weight: 600;
+            margin-top: 8px;
+            letter-spacing: 1px;
+        }
+        
+        .dia-texto {
+            font-size: 12px;
+            color: #10b981;
+            font-weight: 700;
+            margin-top: 5px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="main-layout">
+    <div class="side-columns">
+        <div class="panel">
+            <img src="{{ url_for('static', filename='logo_gauss.png') }}" style="width:70px; display:block; margin: 0 auto 15px auto;">
+            <h4 style="margin: 0;">GAUSS JORDAN</h4>
+        </div>
+        
+        <!-- PANEL CLIMA CDMX - ACTUALIZADO AUTOMÁTICAMENTE -->
+        <div class="panel" id="panel-clima">
+            <i class="fas fa-sun weather-icon" id="weather-icon" style="color: #fbbf24;"></i>
+            <div class="temp-text" id="weather-temp">--°C</div>
+            <div class="weather-desc" id="weather-desc">Cargando...</div>
+            <div class="location-text">
+                <i class="fas fa-location-dot" style="color: #ef4444; margin-right: 4px;"></i>CDMX
+            </div>
+        </div>
+    </div>
+
+    <div class="glass-capsule">
+        <img src="{{ url_for('static', filename='escudo_ingenieria.png') }}" class="logo-central">
+        <h2 style="margin: 0;">BIENVENIDO</h2>
+        <p style="font-size: 12px; color: #64748b; margin-bottom: 25px;">CONTROL ESTUDIANTIL</p>
+        <div class="input-group"><input type="text" id="correo" placeholder="admin"></div>
+        <div class="input-group"><input type="password" id="contrasena" placeholder="****"></div>
+        <button class="btn-login" onclick="validar()">Autenticar Credenciales</button>
+    </div>
+
+    <div class="side-columns">
+        <!-- PANEL HORA Y FECHA - ACTUALIZADO EN TIEMPO REAL -->
+        <div class="panel">
+            <h2 style="margin:0; font-size: 32px; letter-spacing: 2px;" id="clock-time">--:--</h2>
+            <p class="fecha-texto" id="clock-date">Cargando...</p>
+            <p class="dia-texto" id="clock-day">---</p>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ============================================
+    // RELOJ EN TIEMPO REAL
+    // ============================================
+    
+    function actualizarReloj() {
+        const ahora = new Date();
+        
+        // Hora formato 12h con AM/PM
+        let horas = ahora.getHours();
+        const minutos = String(ahora.getMinutes()).padStart(2, '0');
+        const ampm = horas >= 12 ? 'PM' : 'AM';
+        horas = horas % 12;
+        horas = horas ? horas : 12;
+        
+        document.getElementById('clock-time').textContent = `${horas}:${minutos} ${ampm}`;
+        
+        // Fecha en formato: 16 JUN, 2026
+        const meses = ['ENE', 'FEB', 'MAR', 'ABR', 'MAY', 'JUN', 'JUL', 'AGO', 'SEP', 'OCT', 'NOV', 'DIC'];
+        const dia = String(ahora.getDate()).padStart(2, '0');
+        const mes = meses[ahora.getMonth()];
+        const anio = ahora.getFullYear();
+        
+        document.getElementById('clock-date').textContent = `${dia} ${mes}, ${anio}`;
+        
+        // Día de la semana
+        const diasSemana = ['DOMINGO', 'LUNES', 'MARTES', 'MIÉRCOLES', 'JUEVES', 'VIERNES', 'SÁBADO'];
+        document.getElementById('clock-day').textContent = diasSemana[ahora.getDay()];
+    }
+    
+    // Actualizar inmediatamente y cada segundo
+    actualizarReloj();
+    setInterval(actualizarReloj, 1000);
+
+    // ============================================
+    // CLIMA CDMX - API GRATUITA Open-Meteo
+    // ============================================
+    
+    async function obtenerClimaCDMX() {
+        try {
+            const response = await fetch(
+                'https://api.open-meteo.com/v1/forecast?latitude=19.43&longitude=-99.13&current_weather=true'
+            );
+            const data = await response.json();
+            
+            const temp = Math.round(data.current_weather.temperature);
+            const code = data.current_weather.weathercode;
+            
+            const weatherMap = {
+                0: { icon: 'fa-sun', color: '#fbbf24', desc: 'Despejado' },
+                1: { icon: 'fa-cloud-sun', color: '#fbbf24', desc: 'Parcialmente nublado' },
+                2: { icon: 'fa-cloud', color: '#94a3b8', desc: 'Nublado' },
+                3: { icon: 'fa-cloud', color: '#64748b', desc: 'Muy nublado' },
+                45: { icon: 'fa-smog', color: '#9ca3af', desc: 'Niebla' },
+                48: { icon: 'fa-smog', color: '#9ca3af', desc: 'Niebla' },
+                51: { icon: 'fa-cloud-rain', color: '#60a5fa', desc: 'Llovizna' },
+                53: { icon: 'fa-cloud-rain', color: '#60a5fa', desc: 'Llovizna' },
+                55: { icon: 'fa-cloud-rain', color: '#3b82f6', desc: 'Llovizna fuerte' },
+                61: { icon: 'fa-cloud-showers-heavy', color: '#3b82f6', desc: 'Lluvia' },
+                63: { icon: 'fa-cloud-showers-heavy', color: '#2563eb', desc: 'Lluvia fuerte' },
+                65: { icon: 'fa-cloud-showers-heavy', color: '#1d4ed8', desc: 'Lluvia intensa' },
+                71: { icon: 'fa-snowflake', color: '#e0f2fe', desc: 'Nieve' },
+                73: { icon: 'fa-snowflake', color: '#bae6fd', desc: 'Nieve' },
+                75: { icon: 'fa-snowflake', color: '#7dd3fc', desc: 'Nieve intensa' },
+                95: { icon: 'fa-bolt', color: '#fbbf24', desc: 'Tormenta' },
+                96: { icon: 'fa-bolt', color: '#f59e0b', desc: 'Tormenta con granizo' },
+                99: { icon: 'fa-bolt', color: '#d97706', desc: 'Tormenta severa' }
+            };
+            
+            const weather = weatherMap[code] || { icon: 'fa-cloud', color: '#94a3b8', desc: 'Nublado' };
+            
+            const iconEl = document.getElementById('weather-icon');
+            iconEl.className = `fas ${weather.icon} weather-icon`;
+            iconEl.style.color = weather.color;
+            
+            document.getElementById('weather-temp').textContent = `${temp}°C`;
+            document.getElementById('weather-desc').textContent = weather.desc;
+            
+        } catch (error) {
+            console.error('Error al obtener clima:', error);
+            document.getElementById('weather-desc').textContent = 'No disponible';
+        }
+    }
+    
+    // Cargar clima al inicio y cada 30 minutos
+    obtenerClimaCDMX();
+    setInterval(obtenerClimaCDMX, 1800000);
+
+    // ============================================
+    // LOGIN (TU CÓDIGO ORIGINAL)
+    // ============================================
+    
+    function validar() {
+        const correo = document.getElementById('correo').value;
+        const contrasena = document.getElementById('contrasena').value;
+
+        fetch('/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ correo: correo, contrasena: contrasena })
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.location.href = '/index';
+            } else {
+                alert(data.mensaje || 'Credenciales incorrectas');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al conectar con el servidor');
+        });
+    }
+</script>
+</body>
+</html>
